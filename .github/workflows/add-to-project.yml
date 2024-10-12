@@ -1,4 +1,4 @@
-name: Add bugs to bugs project
+name: Add issues to related projects
 
 on:
   issues:
@@ -6,8 +6,8 @@ on:
       - opened
 
 jobs:
-  add-to-devos-project:
-    name: Adds cicd labeled issues to devops project 
+  add-to-devops-project:
+    name: Add cicd labeled issues to DevOps project
     runs-on: self-hosted
     steps:
       - uses: actions/add-to-project@v1.0.2
@@ -16,3 +16,15 @@ jobs:
           github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
           labeled: cicd
           label-operator: OR
+
+  add-to-test-project:
+    name: Add test labeled issues to Test project
+    runs-on: self-hosted
+    steps:
+      - uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: https://github.com/orgs/Soft-Engin/projects/11
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          labeled: test
+          label-operator: OR
+

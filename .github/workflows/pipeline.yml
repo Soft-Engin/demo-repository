@@ -20,7 +20,7 @@ jobs:
   sonar_analysis:
     name: Sonar Analysis
     runs-on: self-hosted
-    needs: proof_html
+    #needs: proof_html # skip this requirement for now as we dont have vaild html yet
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4

@@ -9,7 +9,7 @@ on:
 jobs:
   scan:
     name: Security Scan with Trivy
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:

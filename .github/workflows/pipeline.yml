@@ -20,7 +20,7 @@ jobs:
   sonar_analysis:
     name: Sonar Analysis
     runs-on: self-hosted
-    # needs: proof_html # skipping this requirement for now as we dont have a vaild html
+    needs: proof_html
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -53,12 +53,28 @@ jobs:
           context: .
           push: false
           tags: mustafakrc/demo-repository:${{ steps.vars.outputs.short_sha }}
+      - name: Save Docker Image as Artifact
+        run: |
+          docker save mustafakrc/demo-repository:${{ steps.vars.outputs.short_sha }} -o image.tar
+        shell: bash
+      - name: Upload Image Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: image
+          path: image.tar
+          retention-days: 1 # Delete the artifact after 1 day
 
   trivy_scan:
     name: Security Scan with Trivy
     runs-on: self-hosted
     needs: dockerize
     steps:
+      - name: Download Image Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: image
+      - name: Load Docker Image
+        run: docker load -i image.tar # load the image from the artifact
       - name: Scan Docker Image with Trivy
         uses: aquasecurity/trivy-action@0.27.0
         with:
@@ -83,7 +99,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Push Docker Image
+      - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
           context: .

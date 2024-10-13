@@ -20,7 +20,7 @@ jobs:
   sonar_analysis:
     name: Sonar Analysis
     runs-on: self-hosted
-    #needs: proof_html # skipping this because our html doesnt pass the test yet
+    # needs: proof_html # skipping this requirement for now as we dont have a vaild html
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -36,6 +36,8 @@ jobs:
     name: Build Docker Image
     runs-on: self-hosted
     needs: sonar_analysis
+    outputs:
+      image_tag: ${{ steps.vars.outputs.short_sha }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -43,7 +45,8 @@ jobs:
         uses: docker/setup-buildx-action@v2
       - name: Extract Short Commit SHA
         id: vars
-        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+        run: |
+          echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
       - name: Build Docker Image
         uses: docker/build-push-action@v4
         with:
@@ -56,17 +59,20 @@ jobs:
     runs-on: self-hosted
     needs: dockerize
     steps:
-      - name: Set up Trivy
-        uses: aquasecurity/trivy-action@0.27.0
-      - name: Scan Docker Image
+      - name: Scan Docker Image with Trivy
         uses: aquasecurity/trivy-action@0.27.0
         with:
-          image-ref: mustafakrc/demo-repository:${{ needs.dockerize.outputs.vars.short_sha }}
+          image-ref: mustafakrc/demo-repository:${{ needs.dockerize.outputs.image_tag }}
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
 
   publish:
     name: Publish Docker Image
     runs-on: self-hosted
     needs: trivy_scan
+    if: ${{ needs.trivy_scan.result == 'success' }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -77,11 +83,11 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and Push Docker Image
+      - name: Push Docker Image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: |
-            mustafakrc/demo-repository:${{ needs.dockerize.outputs.vars.short_sha }}
+            mustafakrc/demo-repository:${{ needs.dockerize.outputs.image_tag }}
             mustafakrc/demo-repository:latest

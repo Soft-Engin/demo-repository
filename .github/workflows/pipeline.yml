@@ -35,58 +35,10 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
   dockerize:
-    name: Build Docker Image
+    name: Build Docker Image and Push to Registry
     runs-on: self-hosted
     needs: sonar_analysis
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build Docker Image
-        uses: docker/build-push-action@v6
-        with:
-          tags: mustafakrc/demo-repository:${{ github.sha }}
-          outputs: type=docker,dest=/tmp/image.tar
-
-      - name: Upload Image Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: image
-          path: /tmp/image.tar
-          retention-days: 1 # Delete the artifact after 1 day
-
-  trivy_scan:
-    name: Security Scan with Trivy
-    runs-on: self-hosted
-    needs: dockerize
-    steps:
-      - name: Download Image Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: image
-          path: /tmp
-
-      - name: Load Docker Image
-        run: docker load --input /tmp/myimage.tar # load the image from the artifact
-
-      - name: Scan Docker Image with Trivy
-        uses: aquasecurity/trivy-action@0.27.0
-        with:
-          image-ref: mustafakrc/demo-repository:${{ github.sha }}
-          format: table
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-
-  publish:
-    name: Publish Docker Image
-    runs-on: self-hosted
-    needs: trivy_scan
-    if: ${{ needs.trivy_scan.result == 'success' }}
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -102,5 +54,5 @@ jobs:
           context: .
           push: true
           tags: |
-            mustafakrc/demo-repository:${{ github.sha }}
-            mustafakrc/demo-repository:latest
+            your-dockerhub-username/demo-repository:${{ github.sha }}
+            your-dockerhub-username/demo-repository:latest

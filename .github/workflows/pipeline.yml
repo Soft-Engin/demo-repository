@@ -54,5 +54,5 @@ jobs:
           context: .
           push: true
           tags: |
-            your-dockerhub-username/demo-repository:${{ github.sha }}
-            your-dockerhub-username/demo-repository:latest
+            mustafakrc/demo-repository:${{ github.sha }}
+            mustafakrc/demo-repository:latest

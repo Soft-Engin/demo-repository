@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+      - development
+      - release
+      - hotfix/*
 
 jobs:
   proof_html:
@@ -48,11 +51,24 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Docker Image
+      - name: Build and Push Docker Image for Development and Main
+        if: contains(github.ref, 'refs/heads/development') || contains(github.ref, 'refs/heads/main')
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: |
-            mustafakrc/demo-repository:${{ github.sha }}
-            mustafakrc/demo-repository:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/dev-${{ github.event.repository.name }}:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/dev-${{ github.event.repository.name }}:latest
+
+      - name: Build and Push Docker Image for Release and Hotfix
+        if: contains(github.ref, 'refs/heads/release') || startsWith(github.ref, 'refs/heads/hotfix')
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:latest
+
+

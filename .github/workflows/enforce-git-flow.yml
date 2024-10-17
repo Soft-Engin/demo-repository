@@ -1,0 +1,40 @@
+name: Enforce Git Flow
+
+on:
+  pull_request:
+    branches:
+      - main
+      - development
+      - release
+
+jobs:
+  enforce-git-flow:
+    runs-on: self-hosted
+
+    steps:
+      - name: Check branch naming conventions
+        env:
+          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          # Define allowed patterns for base branches and head branches
+          if [[ "$BASE_BRANCH" == "main" ]]; then
+            ALLOWED_PATTERN="^(release|hotfix)\/.*$"
+          elif [[ "$BASE_BRANCH" == "development" ]]; then
+            ALLOWED_PATTERN="^(feature|hotfix|bugfix)\/.*$"
+          elif [[ "$BASE_BRANCH" == "release" ]]; then
+            ALLOWED_PATTERN="^(development)\/.*$"
+          else
+            echo "Error: Pull requests are only allowed to 'main', 'development', or 'release' branches."
+            exit 1
+          fi
+
+          # Check if the head branch matches the allowed pattern
+          if [[ ! "$HEAD_BRANCH" =~ $ALLOWED_PATTERN ]]; then
+            echo "Error: Pull requests to '$BASE_BRANCH' can only come from branches matching '$ALLOWED_PATTERN'."
+            exit 1
+          fi
+
+      - name: Success message
+        if: success()
+        run: echo "Branch naming is compliant with Git Flow."

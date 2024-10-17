@@ -54,5 +54,8 @@ jobs:
           context: .
           push: true
           tags: |
-            mustafakrc/demo-repository:${{ github.sha }}
-            mustafakrc/demo-repository:latest
+            ${{ contains(github.ref, 'refs/heads/development') || contains(github.ref, 'refs/heads/main') && format('{0}/dev-{1}', secrets.DOCKERHUB_USERNAME, github.event.repository.name) }}:${{ github.sha }}
+            ${{ contains(github.ref, 'refs/heads/development') || contains(github.ref, 'refs/heads/main') && format('{0}/dev-{1}', secrets.DOCKERHUB_USERNAME, github.event.repository.name) }}:latest
+            ${{ (contains(github.ref, 'refs/heads/release') || startsWith(github.ref, 'refs/heads/hotfix')) && format('{0}/{1}', secrets.DOCKERHUB_USERNAME, github.event.repository.name) }}:${{ github.sha }}
+            ${{ (contains(github.ref, 'refs/heads/release') || startsWith(github.ref, 'refs/heads/hotfix')) && format('{0}/{1}', secrets.DOCKERHUB_USERNAME, github.event.repository.name) }}:latest
+

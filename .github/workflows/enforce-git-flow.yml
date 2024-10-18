@@ -21,9 +21,9 @@ jobs:
           if [[ "$BASE_BRANCH" == "main" ]]; then
             ALLOWED_PATTERN="^(release|hotfix)\/.*$"
           elif [[ "$BASE_BRANCH" == "development" ]]; then
-            ALLOWED_PATTERN="^(feature|hotfix|bugfix)\/.*$"
+            ALLOWED_PATTERN="^(feature|hotfix)\/.*$"
           elif [[ "$BASE_BRANCH" == "release" ]]; then
-            ALLOWED_PATTERN="^(development)\/.*$"
+            ALLOWED_PATTERN="^(hotfix)\/.*$"
           else
             echo "Error: Pull requests are only allowed to 'main', 'development', or 'release' branches."
             exit 1
@@ -37,4 +37,4 @@ jobs:
 
       - name: Success message
         if: success()
-        run: echo "Branch naming is compliant with Git Flow."
+        run: echo "Pull request source branch is compliant with Git Flow."
